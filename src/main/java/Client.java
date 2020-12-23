@@ -4,7 +4,7 @@ import java.net.Socket;
 import java.util.Scanner;
 
 public class Client {
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, InterruptedException {
         if (args.length !=1) {
             System.err.println("Ip pls!");
 
@@ -14,19 +14,17 @@ public class Client {
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 
             MessageListener listener = new MessageListener(in);
-//            ClientWriter writer = new ClientWriter(socket);
 
 
             listener.start();
-//            writer.start();
             while (true) {
-                if (!listener.isAlive()) {
-                    scanner.close();
-                    return;
-
-                } else if (scanner.hasNextLine()) {
+                if (scanner.hasNextLine()) {
                     String nxtLn = scanner.nextLine();
                     out.println(nxtLn);
+                    if(nxtLn.startsWith("/quit")) {
+                        listener.join();
+                        return;
+                    }
                     System.out.println(listener.isAlive());
                 }
 

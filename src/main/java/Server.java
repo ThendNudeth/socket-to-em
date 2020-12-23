@@ -96,6 +96,7 @@ public class Server {
                 }
                 System.out.println("Closed: " + socket);
             }
+            return;
         }
     }
 }
