@@ -2,44 +2,93 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashSet;
 import java.util.Scanner;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Server {
+
+    private static Set<String> names = new HashSet<>();
+
+    private static Set<PrintWriter> writers = new HashSet<>();
+
     @SuppressWarnings("all")
     public static void main(String[] args) throws Exception{
+        System.out.println("Server is running...");
+        ExecutorService pool = Executors.newFixedThreadPool(5);
         try (ServerSocket listener = new ServerSocket(6969)) {
-            System.out.println("Server is running...");
-            ExecutorService pool = Executors.newFixedThreadPool(5);
             while (true) {
-                pool.execute(new Doer(listener.accept()));
+                pool.execute(new ClientHandler(listener.accept()));
             }
         }
     }
 
-    private static class Doer implements Runnable {
+    private static class ClientHandler implements Runnable {
         private Socket socket;
+        private String username;
+        private Scanner in;
+        private PrintWriter out;
 
-        public Doer(Socket socket) {
+        public ClientHandler(Socket socket) {
             this.socket = socket;
         }
 
 
         @Override
         public void run() {
-            System.out.println("Connected on: " + socket);
             try {
-                Scanner in = new Scanner(socket.getInputStream());
-                PrintWriter out = new PrintWriter(socket.getOutputStream(),true);
-                while (in.hasNextLine()) {
-                    String clientIn = in.nextLine();
-                    System.out.println("Client typed: " + clientIn);
-                    out.println("I am the server and I say: " + clientIn);
+                in = new Scanner(socket.getInputStream());
+                out = new PrintWriter(socket.getOutputStream(), true);
+
+                while (true) {
+                    out.println("Please enter a username.");
+                    username = in.nextLine();
+                    if (username == null) {
+                        return;
+                    }
+                    synchronized (names) {
+                        if (!username.isBlank() && !names.contains(username)) {
+                            names.add(username);
+                            System.out.println(username + " added.");
+                            break;
+                        }
+                    }
+                }
+
+                out.println("Welcome, " + username + ".\n" +
+                        "You are now in the global chatroom. Just type whatever messages you'd\n" +
+                        "like to send.");
+                for (PrintWriter writer : writers) {
+                    writer.println("MESSAGE: " + username + " has joined");
+                }
+                writers.add(out);
+
+                // Accept messages from this client and broadcast them.
+                while (true) {
+                    String input = in.nextLine();
+                    if (input.toLowerCase().startsWith("/quit")) {
+                        out.println("/quit");
+                        return;
+                    }
+                    for (PrintWriter writer : writers) {
+                        writer.println("MESSAGE " + username + ": " + input);
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
+                if (out != null) {
+                    writers.remove(out);
+                }
+                if (username != null) {
+                    System.out.println(username + " is leaving.");
+                    names.remove(username);
+                    for (PrintWriter writer : writers) {
+                        writer.println("MESSAGE " + username + " has left");
+                    }
+                }
                 try {
                     socket.close();
                 } catch (IOException e) {
