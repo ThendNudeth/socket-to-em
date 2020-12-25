@@ -48,20 +48,28 @@ public class Server {
                     if (username == null) {
                         return;
                     }
-                    synchronized (names) {
+                    if (username.toLowerCase().equals("quit")||username.toLowerCase().equals("help")) {
+                        out.println("Invalid username.");
+//                        return;
+                    } else {
+                        synchronized (names) {
                         if (!username.isBlank() && !names.contains(username)) {
                             names.add(username);
                             System.out.println(username + " added.");
                             break;
                         }
                     }
+                    }
+
+
                 }
 
                 out.println("Welcome, " + username + ".\n" +
                         "You are now in the global chatroom. Just type whatever messages you'd\n" +
-                        "like to send.");
+                        "like to send.\n" +
+                        "Type /help for a list of commands");
                 for (PrintWriter writer : writers) {
-                    writer.println("MESSAGE: " + username + " has joined");
+                    writer.println("NOTIFICATION: " + username + " has joined");
                 }
                 writers.add(out);
 
@@ -72,8 +80,21 @@ public class Server {
                         out.println("/quit");
                         return;
                     }
-                    for (PrintWriter writer : writers) {
-                        writer.println("MESSAGE " + username + ": " + input);
+                    if (input.toLowerCase().startsWith("/help")) {
+                        out.println("SERVER: -If you'd like to broadcast a message,\n" +
+                                "simply type said message.\n" +
+                                "-If you would like to leave the chatroom, type \"/quit\"\n" +
+                                "-If you would like to send a private message, type \"/\", followed\n" +
+                                "by the user's username, a space and then the message.\n" +
+                                "For example: \"/bob hello!\" will send a message only to bob.");
+                    }
+                    if (input.startsWith("/")) {
+
+                    }
+                    else {
+                        for (PrintWriter writer : writers) {
+                            writer.println("MESSAGE " + username + ": " + input);
+                        }
                     }
                 }
             } catch (IOException e) {
@@ -83,10 +104,10 @@ public class Server {
                     writers.remove(out);
                 }
                 if (username != null) {
-                    System.out.println(username + " is leaving.");
+                    System.out.println("NOTIFICATION: " + username + " is leaving.");
                     names.remove(username);
                     for (PrintWriter writer : writers) {
-                        writer.println("MESSAGE " + username + " has left");
+                        writer.println("NOTIFICATION: " + username + " has left");
                     }
                 }
                 try {
@@ -96,7 +117,6 @@ public class Server {
                 }
                 System.out.println("Closed: " + socket);
             }
-            return;
         }
     }
 }

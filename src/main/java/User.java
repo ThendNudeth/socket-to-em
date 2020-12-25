@@ -1,17 +1,14 @@
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Scanner;
 
 public class User {
-    String name;
+    String username;
     PrintWriter out;
-    Scanner in;
 
-//    @Override
-//    public boolean equals (Object object) {
-//        if () {
-//
-//        } else {
-//
-//        }
-//    }
+    User(String username, OutputStream source) {
+        this.username = username;
+        this.out = new PrintWriter(source, true);
+
+    }
 }

@@ -2,6 +2,7 @@ import java.util.Scanner;
 
 public class MessageListener extends Thread{
     private Scanner in;
+    private String nxtLn;
 
     public MessageListener(Scanner in) {
         this.in = in;
@@ -10,7 +11,10 @@ public class MessageListener extends Thread{
     @Override
     public void run() {
         while (true) {
-            String nxtLn = in.nextLine();
+//            if (in.hasNextLine()) {
+                nxtLn = in.nextLine();
+//            }
+
             if (nxtLn.startsWith("/quit")) {
                 return;
             } else {
