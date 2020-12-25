@@ -11,16 +11,12 @@ public class MessageListener extends Thread{
     @Override
     public void run() {
         while (true) {
-//            if (in.hasNextLine()) {
-                nxtLn = in.nextLine();
-//            }
-
+            nxtLn = in.nextLine();
             if (nxtLn.startsWith("/quit")) {
                 return;
             } else {
                 System.out.println(nxtLn);
             }
-
         }
     }
 }

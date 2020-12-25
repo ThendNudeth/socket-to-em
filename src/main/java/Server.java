@@ -12,7 +12,8 @@ public class Server {
 
     private static Set<String> names = new HashSet<>();
 
-    private static Set<PrintWriter> writers = new HashSet<>();
+//    private static Set<PrintWriter> writers = new HashSet<>();
+    private static Set<User> users = new HashSet<>();
 
     @SuppressWarnings("all")
     public static void main(String[] args) throws Exception{
@@ -30,6 +31,7 @@ public class Server {
         private String username;
         private Scanner in;
         private PrintWriter out;
+        private User user;
 
         public ClientHandler(Socket socket) {
             this.socket = socket;
@@ -48,9 +50,8 @@ public class Server {
                     if (username == null) {
                         return;
                     }
-                    if (username.toLowerCase().equals("quit")||username.toLowerCase().equals("help")) {
+                    if (username.toLowerCase().startsWith("quit")||username.toLowerCase().startsWith("help") || username.contains(" ")) {
                         out.println("Invalid username.");
-//                        return;
                     } else {
                         synchronized (names) {
                         if (!username.isBlank() && !names.contains(username)) {
@@ -68,10 +69,12 @@ public class Server {
                         "You are now in the global chatroom. Just type whatever messages you'd\n" +
                         "like to send.\n" +
                         "Type /help for a list of commands");
-                for (PrintWriter writer : writers) {
-                    writer.println("NOTIFICATION: " + username + " has joined");
+
+                for (User user : users) {
+                    user.out.println("NOTIFICATION: " + username + " has joined");
                 }
-                writers.add(out);
+                user = new User(username, out);
+                users.add(user);
 
                 // Accept messages from this client and broadcast them.
                 while (true) {
@@ -89,11 +92,18 @@ public class Server {
                                 "For example: \"/bob hello!\" will send a message only to bob.");
                     }
                     if (input.startsWith("/")) {
+                        String recipient = input.substring(1, input.indexOf(" "));
+                        for (User user : users) {
+                            if (user.username.equals(recipient)) {
+                                user.out.println("WHISPER " + username + ": " + input);
+                                break;
+                            }
+                        }
 
                     }
                     else {
-                        for (PrintWriter writer : writers) {
-                            writer.println("MESSAGE " + username + ": " + input);
+                        for (User user : users) {
+                            user.out.println("MESSAGE " + username + ": " + input);
                         }
                     }
                 }
@@ -101,13 +111,15 @@ public class Server {
                 e.printStackTrace();
             } finally {
                 if (out != null) {
-                    writers.remove(out);
+                    users.remove(user);
                 }
+
                 if (username != null) {
                     System.out.println("NOTIFICATION: " + username + " is leaving.");
                     names.remove(username);
-                    for (PrintWriter writer : writers) {
-                        writer.println("NOTIFICATION: " + username + " has left");
+
+                    for (User user : users) {
+                        user.out.println("NOTIFICATION: " + username + " has left");
                     }
                 }
                 try {
