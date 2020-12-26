@@ -14,7 +14,10 @@ public class MessageListener extends Thread{
             nxtLn = in.nextLine();
             if (nxtLn.startsWith("/quit")) {
                 return;
-            } else {
+            } /*if () {
+
+            } */
+            else {
                 System.out.println(nxtLn);
             }
         }
