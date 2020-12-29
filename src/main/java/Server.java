@@ -45,23 +45,31 @@ public class Server {
 //                in = new Scanner(socket.getInputStream());
                 DataInputStream in = new DataInputStream(socket.getInputStream());
                 out = new PrintWriter(socket.getOutputStream(), true);
-                byte[] input = new byte[1024];
+                byte[] recvd_preamble;
+                byte[] recvd_payload;
 
 
                 while (true) {
                     out.println("Please enter a username.");
-//                    username = in.nextLine();
-                     in.read(input);
-                    if (input!=null) {
-                        System.out.println("packet received");
-                        System.out.println(input);
-                        String str = new String(input);
-                        System.out.println(str);
-//                        in.
-//                        return;
+
+                    recvd_preamble = new byte[2];
+                    in.read(recvd_preamble);
+
+                    if (recvd_preamble[0]!=(byte)0x00) {
+                        out.println("Wrong input type. Packets likely out of order.");
+                        System.out.println(socket +" sent bad data. Server synch likely out of order.");
                     } else {
-                        return;
+                        System.out.println("packet received");
+                        recvd_payload = new byte[(int)recvd_preamble[1]];
+
+                        in.read(recvd_payload);
+                        String input = new String(recvd_payload);
+                        username = input;
+                        System.out.println(input);
+                        out.println("/loginsuc");
+
                     }
+
 
 
 //                    if (username == null) {
