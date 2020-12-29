@@ -17,6 +17,7 @@ public class Client {
             byte[] payload;
             byte[] preamble;
             boolean loggedIn = false;
+            String nxtLn;
 
             Scanner scanner = new Scanner(System.in);
             Scanner in = new Scanner(socket.getInputStream());
@@ -27,20 +28,26 @@ public class Client {
             listener.start();
             while (true) {
                 if (scanner.hasNextLine()) {
-                    String nxtLn = scanner.nextLine();
-                    payload = nxtLn.getBytes(StandardCharsets.UTF_8);
+                    if (!loggedIn) {
+                        nxtLn = scanner.nextLine();
+                        payload = nxtLn.getBytes(StandardCharsets.UTF_8);
 
-                    preamble = new byte[] {(byte) 0x00, (byte)payload.length};
-                    out.write(preamble, 0, preamble.length);
-                    out.flush();
+                        preamble = new byte[] {(byte) 0x00, (byte)payload.length};
+                        out.write(preamble, 0, preamble.length);
+                        out.flush();
 
-                    out.write(payload);
-                    out.flush();
-                    while (!listener.responseRecvd) {
+                        out.write(payload);
+                        out.flush();
+                        while (!listener.responseRecvd) {
 
+                        }
+                        loggedIn = listener.loggedIn;
+                        System.out.println(loggedIn);
+                    } else {
+                        nxtLn = scanner.nextLine();
+                        
                     }
-                    loggedIn = listener.loggedIn;
-                    System.out.println(loggedIn);
+
 //                    out.write(payload);
 
 //                    if (nxtLn.startsWith("/quit")) {

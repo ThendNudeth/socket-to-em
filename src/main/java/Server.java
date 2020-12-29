@@ -65,28 +65,29 @@ public class Server {
                         in.read(recvd_payload);
                         String input = new String(recvd_payload);
                         username = input;
-                        System.out.println(input);
-                        out.println("/loginsuc");
-
+                        if (username.equals("")) {
+                            continue;
+                        }
+                        if (username.toLowerCase().startsWith("quit") || username.toLowerCase().startsWith("help")
+                                || username.toLowerCase().startsWith("link") || username.contains(" ")) {
+                            out.println("Invalid username.");
+                            continue;
+                        } else {
+                            synchronized (names) {
+                                if (!username.isBlank() && !names.contains(username)) {
+                                    names.add(username);
+                                    System.out.println(username + " added.");
+                                    System.out.println(input);
+                                    out.println("/loginsuc");
+                                    break;
+                                }
+                            }
+                        }
                     }
 
 
 
-//                    if (username == null) {
-//                        return;
-//                    }
-//                    if (username.toLowerCase().startsWith("quit") || username.toLowerCase().startsWith("help")
-//                            || username.toLowerCase().startsWith("link") || username.contains(" ")) {
-//                        out.println("Invalid username.");
-//                    } else {
-//                        synchronized (names) {
-//                        if (!username.isBlank() && !names.contains(username)) {
-//                            names.add(username);
-//                            System.out.println(username + " added.");
-//                            break;
-//                        }
-//                    }
-//                    }
+
 
 
                 }
