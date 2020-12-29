@@ -24,7 +24,7 @@ public class Client {
             MessageListener listener = new MessageListener(in);
 
 
-
+            listener.start();
             while (true) {
                 if (scanner.hasNextLine()) {
                     String nxtLn = scanner.nextLine();
@@ -36,16 +36,14 @@ public class Client {
 
                     out.write(payload);
                     out.flush();
+                    while (!listener.responseRecvd) {
+
+                    }
                     loggedIn = listener.loggedIn;
                     System.out.println(loggedIn);
 //                    out.write(payload);
 
-                }
-
-            }
-            listener.start();
-            while (true) {
-                //                    if (nxtLn.startsWith("/quit")) {
+//                    if (nxtLn.startsWith("/quit")) {
 //                        header = new byte[] {(byte)0x00};
 //
 //                        out.write(header, 0, header.length);
@@ -84,6 +82,8 @@ public class Client {
 //                        System.out.println("packet sent");
 //
 //                    }
+                }
+
             }
         }
     }
