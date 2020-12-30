@@ -47,10 +47,17 @@ public class Server {
                 out = new PrintWriter(socket.getOutputStream(), true);
                 byte[] recvd_preamble;
                 byte[] recvd_payload;
+                String input;
+                boolean invalidUsrName=false;
 
 
                 while (true) {
-                    out.println("Please enter a username.");
+                    if (invalidUsrName) {
+                        out.println("Invalid username.  Please enter a username.");
+                    } else {
+                        out.println("Please enter a username.");
+                    }
+                    invalidUsrName=false;
 
                     recvd_preamble = new byte[2];
                     in.read(recvd_preamble);
@@ -63,14 +70,14 @@ public class Server {
                         recvd_payload = new byte[(int)recvd_preamble[1]];
 
                         in.read(recvd_payload);
-                        String input = new String(recvd_payload);
+                        input = new String(recvd_payload);
                         username = input;
                         if (username.equals("")) {
                             continue;
                         }
                         if (username.toLowerCase().startsWith("quit") || username.toLowerCase().startsWith("help")
                                 || username.toLowerCase().startsWith("link") || username.contains(" ")) {
-                            out.println("Invalid username.");
+                            invalidUsrName=true;
                             continue;
                         } else {
                             synchronized (names) {
@@ -84,25 +91,38 @@ public class Server {
                             }
                         }
                     }
-
-
-
-
-
-
                 }
 
-//                out.println("Welcome, " + username + ".\n" +
-//                        "You are now in the global chatroom. Just type whatever messages you'd\n" +
-//                        "like to send.\n" +
-//                        "Type /help for a list of commands");
-//
-//                for (User user : users) {
-//                    user.out.println("NOTIFICATION: " + username + " has joined");
-//                }
-//                user = new User(username, out);
-//                users.add(user);
+                out.println("Welcome, " + username + ".\n" +
+                        "You are now in the global chatroom. Just type whatever messages you'd\n" +
+                        "like to send.\n" +
+                        "Type /help for a list of commands");
 
+                for (User user : users) {
+                    user.out.println("NOTIFICATION: " + username + " has joined");
+                }
+                user = new User(username, out);
+                users.add(user);
+
+                while (true) {
+//                    if (in.)
+                    recvd_preamble = new byte[2];
+                    in.read(recvd_preamble);
+
+                    if (recvd_preamble[0]!=(byte) 0x01) {
+                        out.println("Wrong input type. Packets likely out of order.");
+                        System.out.println(socket +" sent bad data. Server synch likely out of order.");
+                    } else {
+                        recvd_payload = new byte[recvd_preamble[1]];
+                        in.read(recvd_payload);
+
+                        input = new String(recvd_payload);
+//                        System.out.println(input);
+                        for (User user : users) {
+                            user.out.println("MESSAGE " + username + ": " + input);
+                        }
+                    }
+                }
                 // Accept messages from this client and broadcast them.
 //                while (true) {
 //                    String input = in.nextLine();

@@ -17,7 +17,8 @@ public class Client {
             byte[] payload;
             byte[] preamble;
             boolean loggedIn = false;
-            String nxtLn;
+            String nxtLnOut;
+            String nxtLnIn;
 
             Scanner scanner = new Scanner(System.in);
             Scanner in = new Scanner(socket.getInputStream());
@@ -25,29 +26,42 @@ public class Client {
             MessageListener listener = new MessageListener(in);
 
 
+//            listener.start();
+            while (true) {
+                nxtLnIn = in.nextLine();
+                System.out.println(nxtLnIn);
+                if (nxtLnIn.equals("/loginsuc")) {
+                    break;
+                }
+                if (scanner.hasNextLine()) {
+                    nxtLnOut = scanner.nextLine();
+                    payload = nxtLnOut.getBytes(StandardCharsets.UTF_8);
+
+                    preamble = new byte[] {(byte) 0x00, (byte)payload.length};
+                    out.write(preamble, 0, preamble.length);
+                    out.flush();
+
+                    out.write(payload);
+                    out.flush();
+                }
+            }
+
             listener.start();
             while (true) {
-                if (scanner.hasNextLine()) {
-                    if (!loggedIn) {
-                        nxtLn = scanner.nextLine();
-                        payload = nxtLn.getBytes(StandardCharsets.UTF_8);
+                nxtLnOut = scanner.nextLine();
+                payload = nxtLnOut.getBytes(StandardCharsets.UTF_8);
 
-                        preamble = new byte[] {(byte) 0x00, (byte)payload.length};
-                        out.write(preamble, 0, preamble.length);
-                        out.flush();
+                preamble = new byte[] {(byte) 0x01, (byte)payload.length};
+                out.write(preamble, 0, preamble.length);
+                out.flush();
 
-                        out.write(payload);
-                        out.flush();
-                        while (!listener.responseRecvd) {
+                out.write(payload);
+                out.flush();
+            }
 
-                        }
-                        loggedIn = listener.loggedIn;
-                        System.out.println(loggedIn);
-                    } else {
-                        nxtLn = scanner.nextLine();
-                        
-                    }
-
+        }
+    }
+}
 //                    out.write(payload);
 
 //                    if (nxtLn.startsWith("/quit")) {
@@ -89,9 +103,3 @@ public class Client {
 //                        System.out.println("packet sent");
 //
 //                    }
-                }
-
-            }
-        }
-    }
-}
