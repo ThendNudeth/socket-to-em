@@ -1,8 +1,10 @@
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
@@ -31,8 +33,9 @@ public class Server {
         private Socket socket;
         private String username;
         private Scanner in;
-        private PrintWriter out;
+        private DataOutputStream out;
         private User user;
+        private String serverMessage;
 
         public ClientHandler(Socket socket) {
             this.socket = socket;
@@ -44,26 +47,40 @@ public class Server {
             try {
 //                in = new Scanner(socket.getInputStream());
                 DataInputStream in = new DataInputStream(socket.getInputStream());
-                out = new PrintWriter(socket.getOutputStream(), true);
+                out = new DataOutputStream(socket.getOutputStream());
                 byte[] recvd_preamble;
                 byte[] recvd_payload;
+                byte[] preamble;
+                byte[] payload;
                 String input;
                 boolean invalidUsrName=false;
 
 
                 while (true) {
+                    serverMessage = "";
+                    preamble = new byte[] {(byte) 0x00, 0};
                     if (invalidUsrName) {
-                        out.println("Invalid username.  Please enter a username.");
-                    } else {
-                        out.println("Please enter a username.");
+                        serverMessage = "Invalid username.\n";
+                        preamble = new byte[] {(byte) 0x01, 0};
                     }
                     invalidUsrName=false;
+                    serverMessage = serverMessage+"Please enter a username.";
+                    payload = serverMessage.getBytes(StandardCharsets.UTF_8);
+
+                    preamble[1]=(byte) payload.length;
+                    out.write(preamble, 0, preamble.length);
+                    out.flush();
+
+                    out.write(payload);
+                    out.flush();
+
+
 
                     recvd_preamble = new byte[2];
                     in.read(recvd_preamble);
 
                     if (recvd_preamble[0]!=(byte)0x00) {
-                        out.println("Wrong input type. Packets likely out of order.");
+//                        out.println("Wrong input type. Packets likely out of order.");
                         System.out.println(socket +" sent bad data. Server synch likely out of order.");
                     } else {
                         System.out.println("packet received");
@@ -85,7 +102,7 @@ public class Server {
                                     names.add(username);
                                     System.out.println(username + " added.");
                                     System.out.println(input);
-                                    out.println("/loginsuc");
+//                                    out.println("/loginsuc");
                                     break;
                                 }
                             }
@@ -93,36 +110,38 @@ public class Server {
                     }
                 }
 
-                out.println("Welcome, " + username + ".\n" +
-                        "You are now in the global chatroom. Just type whatever messages you'd\n" +
-                        "like to send.\n" +
-                        "Type /help for a list of commands");
+//                out.println("Welcome, " + username + ".\n" +
+//                        "You are now in the global chatroom. Just type whatever messages you'd\n" +
+//                        "like to send.\n" +
+//                        "Type /help for a list of commands");
+//
+//                for (User user : users) {
+//                    user.out.println("NOTIFICATION: " + username + " has joined");
+//                }
+//                user = new User(username, out);
+//                users.add(user);
+//
+//                while (true) {
+////                    if (in.)
+//                    recvd_preamble = new byte[2];
+//                    in.read(recvd_preamble);
+//
+//                    if (recvd_preamble[0]!=(byte) 0x01) {
+//                        out.println("Wrong input type. Packets likely out of order.");
+//                        System.out.println(socket +" sent bad data. Server synch likely out of order.");
+//                    } else {
+//                        recvd_payload = new byte[recvd_preamble[1]];
+//                        in.read(recvd_payload);
+//
+//                        input = new String(recvd_payload);
+////                        System.out.println(input);
+//                        for (User user : users) {
+//                            user.out.println("MESSAGE " + username + ": " + input);
+//                        }
+//                    }
+//                }
 
-                for (User user : users) {
-                    user.out.println("NOTIFICATION: " + username + " has joined");
-                }
-                user = new User(username, out);
-                users.add(user);
 
-                while (true) {
-//                    if (in.)
-                    recvd_preamble = new byte[2];
-                    in.read(recvd_preamble);
-
-                    if (recvd_preamble[0]!=(byte) 0x01) {
-                        out.println("Wrong input type. Packets likely out of order.");
-                        System.out.println(socket +" sent bad data. Server synch likely out of order.");
-                    } else {
-                        recvd_payload = new byte[recvd_preamble[1]];
-                        in.read(recvd_payload);
-
-                        input = new String(recvd_payload);
-//                        System.out.println(input);
-                        for (User user : users) {
-                            user.out.println("MESSAGE " + username + ": " + input);
-                        }
-                    }
-                }
                 // Accept messages from this client and broadcast them.
 //                while (true) {
 //                    String input = in.nextLine();

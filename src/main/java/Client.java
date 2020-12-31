@@ -1,3 +1,4 @@
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -16,21 +17,30 @@ public class Client {
 
             byte[] payload;
             byte[] preamble;
-            boolean loggedIn = false;
+
+            byte[] recvd_preamble;
+            byte[] recvd_payload;
+
             String nxtLnOut;
-            String nxtLnIn;
+            String messageIn;
 
             Scanner scanner = new Scanner(System.in);
-            Scanner in = new Scanner(socket.getInputStream());
+            DataInputStream in = new DataInputStream(socket.getInputStream());
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-            MessageListener listener = new MessageListener(in);
+//            MessageListener listener = new MessageListener(in);
 
 
-//            listener.start();
             while (true) {
-                nxtLnIn = in.nextLine();
-                System.out.println(nxtLnIn);
-                if (nxtLnIn.equals("/loginsuc")) {
+                recvd_preamble = new byte[2];
+                in.read(recvd_preamble);
+
+                recvd_payload = new byte[(int) recvd_preamble[1]];
+                in.read(recvd_payload);
+
+                messageIn = new String(recvd_payload);
+                System.out.println(messageIn);
+
+                if (messageIn.equals("/loginsuc")) {
                     break;
                 }
                 if (scanner.hasNextLine()) {
@@ -46,7 +56,7 @@ public class Client {
                 }
             }
 
-            listener.start();
+//            listener.start();
             while (true) {
                 nxtLnOut = scanner.nextLine();
                 payload = nxtLnOut.getBytes(StandardCharsets.UTF_8);
